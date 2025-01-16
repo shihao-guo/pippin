@@ -2,6 +2,14 @@
 
 Thank you for your interest in contributing to the **Pippin Framework**! 🎉 Your contributions help make this project better for everyone.
 
+## **By Contributing, You Agree To**
+
+By submitting a pull request, you affirm that you have the right to license your contributions under the [MIT License](./LICENSE) and agree to the following:
+
+- **Ownership:** You retain ownership of any intellectual property rights you hold in your contributions.
+- **License Grant:** You grant Pippin and its users a perpetual, worldwide, non-exclusive, royalty-free license to use, modify, and distribute your contributions under the terms of the [MIT License](./LICENSE).
+- **No Restrictions:** Your contributions do not infringe upon any third-party rights and are free from any restrictions that would prevent them from being licensed under the MIT License.
+
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
