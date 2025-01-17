@@ -13,6 +13,7 @@ By submitting a pull request, you affirm that you have the right to license your
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [Governance](#governance)
 - [How to Contribute](#how-to-contribute)
   - [Reporting Issues](#reporting-issues)
   - [Suggesting Features](#suggesting-features)
@@ -37,6 +38,10 @@ By submitting a pull request, you affirm that you have the right to license your
 ## Code of Conduct
 
 We are committed to providing a welcoming and inclusive environment for all contributors. Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating.
+
+## Governance
+
+Our project follows a community-oriented governance model, outlined in the [Governance Document](./GOVERNANCE.md). This document details how decisions are made, roles and responsibilities, and how contributors can engage in the project's evolution.
 
 ## How to Contribute
 
