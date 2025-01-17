@@ -1,6 +1,6 @@
 # .github/workflows/ci.yml
 
-name: CI Pipeline
+name: Simple CI Pipeline
 
 on:
   push:
@@ -29,29 +29,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. Compile Python Files
+      # 3a. Install tree (Optional: For directory listing)
+      - name: Install tree
+        run: |
+          sudo apt-get update
+          sudo apt-get install tree
+
+      # 4. List Directory Structure for Debugging
+      - name: List Directory Structure
+        run: |
+          echo "Repository structure:"
+          tree -L 2
+
+      # 5. Compile Python Files
       - name: Compile Python Files
         run: |
-          python -m compileall .
+          python -m compileall my_digital_being/
 
-      # 5. Test `server.py` Initialization
-      - name: Test server.py Initialization
+      # 6. Test server.py Initialization with timeout
+      - name: Test server.py Initialization with timeout
         env:
           COMPOSIO_API_KEY: "dummy_key"  # Provide dummy or necessary environment variables
           # Add other required environment variables here as needed
         run: |
           # Run `server.py` in the background and terminate after 10 seconds
-          nohup python server.py &
-
+          nohup python my_digital_being/server.py &
+  
           # Capture the process ID
           SERVER_PID=$!
-
+  
           # Wait for 10 seconds
           sleep 10
-
+  
           # Terminate the server process
           kill $SERVER_PID
-
+  
           # Optionally, check if the process was terminated successfully
           if ps -p $SERVER_PID > /dev/null; then
             echo "server.py is still running after timeout. Failing the build."
