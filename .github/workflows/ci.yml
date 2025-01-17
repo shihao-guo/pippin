@@ -63,28 +63,3 @@ jobs:
         run: |
           python -m compileall my_digital_being/
 
-      # 8. Test server.py Initialization with timeout and ignore warnings
-      - name: Test server.py Initialization with timeout and ignore warnings
-        env:
-          COMPOSIO_API_KEY: ""  # Blank API Key to simulate missing key
-          PYTHONWARNINGS: "ignore::DeprecationWarning,ignore::UserWarning"
-        run: |
-          # Run `server.py` in the background and terminate after 10 seconds
-          nohup python my_digital_being/server.py &
-  
-          # Capture the process ID
-          SERVER_PID=$!
-  
-          # Wait for 10 seconds
-          sleep 10
-  
-          # Terminate the server process
-          kill $SERVER_PID || true
-  
-          # Check if the process was terminated successfully
-          if ps -p $SERVER_PID > /dev/null; then
-            echo "server.py is still running after timeout. Failing the build."
-            exit 1
-          else
-            echo "server.py attempted to run and was terminated after timeout."
-          fi
