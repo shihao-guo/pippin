@@ -32,10 +32,11 @@ By submitting a pull request, you affirm that you have the right to license your
   - [Getting Involved](#getting-involved)
 - [Inspired Projects & Forks (We don't have this yet)](#inspired-projects--forks-we-dont-have-this-yet)
 - [Additional Tips](#additional-tips)
+- [Using Issue and Pull Request Templates](#using-issue-and-pull-request-templates)
 
 ## Code of Conduct
 
-We are committed to providing a welcoming and inclusive environment for all contributors. Be nice!
+We are committed to providing a welcoming and inclusive environment for all contributors. Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating.
 
 ## How to Contribute
 
@@ -125,7 +126,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 
 ## External Integrations
 
-- **Prefer External APIs**: Integrate external APIs outside the core framework. Composio is a good option, but would be great to look into setting up Pippin Skill/Activities repository we can pull from.
+- **Prefer External APIs**: Integrate external APIs outside the core framework. Composio is a good option, but it would be great to look into setting up a Pippin Skills/Activities repository we can pull from.
 
 ## Expanding Pippin with Skills and Activities (Planned)
 
@@ -160,8 +161,24 @@ Stay tuned for updates on the **Skills and Activities Repository**. In the meant
 - **Be Respectful**: Engage respectfully with all contributors.
 - **Test Thoroughly**: Ensure your contributions are well-tested to maintain reliability.
 
+## Using Issue and Pull Request Templates
+
+To streamline the contribution process, we have set up standardized templates for issues and pull requests. These templates help maintain consistency and ensure that all necessary information is provided.
+
+### Issue Templates
+
+We have separate templates for different types of issues:
+
+1. **Bug Report:** Use this template to report bugs or unexpected behavior.
+2. **Feature Request:** Use this template to suggest new features or enhancements.
+3. **Documentation Improvement:** Use this template to propose changes or additions to the documentation.
+
+When you open a new issue, select the appropriate template from the **"New issue"** dropdown.
+
+### Pull Request Template
+
+Our pull request template ensures that all PRs include essential information for a smooth review process.
+
+When you open a new pull request, the template will automatically populate the description. Please fill out all sections to provide context and details about your changes.
+
 ---
-
-Thank you for considering contributing to the **Pippin Framework**! Together, we can build a robust and user-friendly tool that benefits the entire community.
-
-Happy coding! 🚀
