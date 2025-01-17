@@ -34,17 +34,17 @@ jobs:
         run: |
           mkdir -p my_digital_being/config
           cp my_digital_being/config_sample/*.json my_digital_being/config/
-      
+
       # 5. Set Dummy API Keys in Config Files
       - name: Set Dummy API Keys
         run: |
-          # Replace API keys in character_config.json with dummy values
-          sed -i 's/"COMPOSIO_API_KEY": ".*"/"COMPOSIO_API_KEY": "dummy_key"/' my_digital_being/config/character_config.json
+          # Replace API keys in character_config.json with blank or dummy values
+          sed -i 's/"COMPOSIO_API_KEY": ".*"/"COMPOSIO_API_KEY": ""/' my_digital_being/config/character_config.json
           
-          # Replace API keys in skills_config.json with dummy values
-          sed -i 's/"LITELLM_API_KEY": ".*"/"LITELLM_API_KEY": "dummy_key"/' my_digital_being/config/skills_config.json
-          sed -i 's/"OPENAI_API_KEY": ".*"/"OPENAI_API_KEY": "dummy_key"/' my_digital_being/config/skills_config.json
-          sed -i 's/"TWITTER_API_KEY": ".*"/"TWITTER_API_KEY": "dummy_key"/' my_digital_being/config/skills_config.json
+          # Replace API keys in skills_config.json with blank or dummy values
+          sed -i 's/"LITELLM_API_KEY": ".*"/"LITELLM_API_KEY": ""/' my_digital_being/config/skills_config.json
+          sed -i 's/"OPENAI_API_KEY": ".*"/"OPENAI_API_KEY": ""/' my_digital_being/config/skills_config.json
+          sed -i 's/"TWITTER_API_KEY": ".*"/"TWITTER_API_KEY": ""/' my_digital_being/config/skills_config.json
           # Add more sed commands as necessary based on your config files
 
       # 6. Install and Use the 'tree' Command for Debugging
@@ -66,7 +66,7 @@ jobs:
       # 8. Test server.py Initialization with timeout and ignore warnings
       - name: Test server.py Initialization with timeout and ignore warnings
         env:
-          COMPOSIO_API_KEY: "dummy_key"  # Dummy key set in config
+          COMPOSIO_API_KEY: ""  # Blank API Key to simulate missing key
           PYTHONWARNINGS: "ignore::DeprecationWarning,ignore::UserWarning"
         run: |
           # Run `server.py` in the background and terminate after 10 seconds
@@ -86,5 +86,5 @@ jobs:
             echo "server.py is still running after timeout. Failing the build."
             exit 1
           else
-            echo "server.py ran successfully without fatal errors."
+            echo "server.py attempted to run and was terminated after timeout."
           fi
