@@ -1,10 +1,7 @@
 /**********************************************
  * onboarding.js
  * Enhanced web UI wizard for "Onboarding"
- * Includes:
- * - LLM provider selection
- * - Advanced text fields
- * - Activity enable/disable checkboxes
+ * LLM selection: "LiteLLM" or "None"
  **********************************************/
 
 (function() {
@@ -54,13 +51,14 @@
           <hr/>
           <h4>2) LLM Setup</h4>
           <p style="font-size:0.9em; color:var(--text-secondary);">
-            Choose how you'd like your being to use LLM. If you pick "LiteLLM," you can specify a model (e.g. "anthropic/claude-3", "openrouter/openai/gpt-4", etc.).
+            If you pick "LiteLLM," you can specify a model (like "anthropic/claude-2" or "openrouter/openai/gpt-4") 
+            and optionally provide a single API key. 
+            That key might be from OpenAI, an OpenRouter token, or other.
           </p>
           <div class="form-group">
             <label>LLM Choice</label>
             <select id="onboardingLLMChoice" class="styled-input">
-              <option value="lite_llm">LiteLLM (Anthropic, OpenAI, XAI, OpenRouter...)</option>
-              <option value="openai_chat">OpenAI Chat Only</option>
+              <option value="lite_llm">LiteLLM</option>
               <option value="none">None (Skip LLM)</option>
             </select>
           </div>
@@ -68,8 +66,8 @@
           <!-- LiteLLM fields -->
           <div id="liteLLMSetup" style="display:none;">
             <div class="form-group">
-              <label>Model Name (e.g. "anthropic/claude-3" or "openrouter/openai/gpt-4")</label>
-              <input type="text" id="onboardingLiteLLMModelName" class="styled-input" value="openai/gpt-4o" />
+              <label>Model Name (e.g. "anthropic/claude-2" or "openrouter/openai/gpt-4")</label>
+              <input type="text" id="onboardingLiteLLMModelName" class="styled-input" value="openai/gpt-4" />
             </div>
             <div class="form-group">
               <label>API Key (optional)</label>
@@ -77,18 +75,10 @@
             </div>
           </div>
 
-          <!-- OpenAI Chat fields -->
-          <div id="openAISetup" style="display:none;">
-            <div class="form-group">
-              <label>OpenAI API Key</label>
-              <input type="text" id="onboardingOpenAIKey" class="styled-input" placeholder="OPENAI_API_KEY" />
-            </div>
-          </div>
-
           <hr/>
           <h4>3) Advanced Setup</h4>
           <p style="font-size:0.9em; color:var(--text-secondary);">
-            Provide additional multi-line text for advanced objectives, example activities, and general constraints. 
+            Provide additional multi-line text for advanced objectives, example activities, and general constraints.
             (Optional, leave blank if you prefer.)
           </p>
           <div class="form-group">
@@ -135,14 +125,10 @@
     const llmChoiceSelect = onboardingOverlay.querySelector('#onboardingLLMChoice');
     llmChoiceSelect.addEventListener('change', handleLLMChoiceChange);
 
-    // Initialize based on default "lite_llm"
+    // Default "lite_llm" or "none"
     handleLLMChoiceChange();
   }
 
-  /*
-   * Fetch config, then also fetch the list of discovered activities
-   * so we can display them for enable/disable checkboxes.
-   */
   async function loadOnboardingData() {
     try {
       // 1) get_config
@@ -198,20 +184,13 @@
     if (defaultSkill === "lite_llm") {
       choice = "lite_llm";
       const liteCfg = skillCfg.lite_llm || {};
-      const modelName = liteCfg.model_name || "openai/gpt-4o";
+      const modelName = liteCfg.model_name || "openai/gpt-4";
       document.getElementById('onboardingLiteLLMModelName').value = modelName;
-    } else if (defaultSkill === "openai_chat") {
-      choice = "openai_chat";
-      // We don't auto-populate openAI key from config, as it is not stored there
     }
     document.getElementById('onboardingLLMChoice').value = choice;
     handleLLMChoiceChange();
   }
 
-  /*
-   * Display the list of discovered activities with checkboxes 
-   * for enable/disable (based on "enabled" from server).
-   */
   function displayActivityEnables() {
     const container = document.getElementById('activityEnableSection');
     if (!container) return;
@@ -231,7 +210,9 @@
         <label style="display:flex; align-items:center; gap:8px;">
           <input type="checkbox" id="${checkboxId}" ${isEnabled ? 'checked' : ''}/>
           <strong>${className}</strong> <em>(${moduleName})</em>
-          <span style="font-size:0.9em; color:var(--text-secondary);">cooldown=${info.cooldown}, energy=${info.energy_cost}</span>
+          <span style="font-size:0.9em; color:var(--text-secondary);">
+            cooldown=${info.cooldown}, energy=${info.energy_cost}
+          </span>
         </label>
       </div>
       `;
@@ -241,9 +222,7 @@
 
   function openOnboardingModal() {
     if (onboardingOverlay) {
-      // Load data from the server
       loadOnboardingData().then(() => {
-        // Display the modal
         onboardingOverlay.style.display = 'flex';
         onboardingOverlay.style.alignItems = 'center';
         onboardingOverlay.style.justifyContent = 'center';
@@ -260,17 +239,11 @@
   function handleLLMChoiceChange() {
     const choice = document.getElementById('onboardingLLMChoice').value;
     const liteLLMSetup = document.getElementById('liteLLMSetup');
-    const openAISetup = document.getElementById('openAISetup');
 
     if (choice === 'lite_llm') {
       liteLLMSetup.style.display = 'block';
-      openAISetup.style.display = 'none';
-    } else if (choice === 'openai_chat') {
-      liteLLMSetup.style.display = 'none';
-      openAISetup.style.display = 'block';
     } else {
       liteLLMSetup.style.display = 'none';
-      openAISetup.style.display = 'none';
     }
   }
 
@@ -290,31 +263,20 @@
     let skills = {};
     const llmChoice = document.getElementById('onboardingLLMChoice').value;
     if (llmChoice === 'lite_llm') {
-      const modelName = document.getElementById('onboardingLiteLLMModelName').value.trim() || "openai/gpt-4o";
+      const modelName = document.getElementById('onboardingLiteLLMModelName').value.trim() || "openai/gpt-4";
       const liteKey = document.getElementById('onboardingLiteLLMApiKey').value.trim();
       skills["lite_llm"] = {
         "enabled": true,
         "model_name": modelName,
-        "required_api_keys": [],
-        "api_key_mapping": {}
+        "required_api_keys": ["LITELLM"],
+        "api_key_mapping": {
+          "LITELLM": "LITELLM_API_KEY"
+        }
       };
       if (liteKey) {
         skills["lite_llm"]["provided_api_key"] = liteKey;
       }
       skills["default_llm_skill"] = "lite_llm";
-    } else if (llmChoice === 'openai_chat') {
-      const openaiKey = document.getElementById('onboardingOpenAIKey').value.trim();
-      skills["openai_chat"] = {
-        "enabled": true,
-        "required_api_keys": ["OPENAI"],
-        "api_key_mapping": {
-          "OPENAI": "OPENAI_API_KEY"
-        }
-      };
-      if (openaiKey) {
-        skills["openai_chat"]["provided_api_key"] = openaiKey;
-      }
-      skills["default_llm_skill"] = "openai_chat";
     } else {
       // none
       skills["default_llm_skill"] = null;
@@ -354,7 +316,6 @@
     if (generalConstraints && generalConstraints.trim()) {
       constraints["global_constraints"] = generalConstraints.trim();
     }
-    // Merge in our new "activities_config"
     constraints["activities_config"] = activities_config;
 
     // Prepare final data to send

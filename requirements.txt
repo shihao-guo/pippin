@@ -2,6 +2,7 @@
 
 composio-openai>=0.1.0
 openai>=0.27.0
+litellm>1.58.0
 
 # Websocket server support
 websockets>=12.0

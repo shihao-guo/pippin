@@ -21,8 +21,9 @@ import websockets
 from websockets.server import serve
 from websockets.legacy.server import WebSocketServerProtocol
 
-from framework.main import DigitalBeing
+# Import api_manager at top-level (not again inside any function)
 from framework.api_management import api_manager
+from framework.main import DigitalBeing
 from framework.skill_config import DynamicComposioSkills
 
 logging.basicConfig(level=logging.INFO)
@@ -40,7 +41,7 @@ class DigitalBeingServer:
         self.being_state: Dict[str, Any] = {}
         self.static_path = Path(__file__).parent / "static"
 
-        # [ADDED] Additional flags for running/paused
+        # Additional flags for running/paused
         self.running = False
         self.paused = False
 
@@ -407,11 +408,11 @@ class DigitalBeingServer:
                     "config": self.being.configs,
                 }
 
-            # [ADDED] 'get_activities' now returns 'enabled' from activity_constraints["activities_config"]
             elif command == "get_activities":
+                # Return loaded activities with 'enabled' status from activity_constraints
                 acts = self.being.activity_loader.get_all_activities()
                 info = {}
-                # This dictionary might be in self.being.configs["activity_constraints"]["activities_config"]
+
                 activities_config = {}
                 if (
                     "activity_constraints" in self.being.configs
@@ -424,7 +425,6 @@ class DigitalBeingServer:
 
                 for module_name, cls in acts.items():
                     class_name = cls.__name__
-                    # If user has an "enabled" setting, read it. Otherwise default to True
                     is_enabled = True
                     if class_name in activities_config:
                         is_enabled = bool(
@@ -459,7 +459,7 @@ class DigitalBeingServer:
                         "message": "Both 'section' and 'key' are required.",
                     }
 
-                # Map sections to their respective config files
+                # Map sections to config files
                 section_to_file = {
                     "character_config": "character_config.json",
                     "skills_config": "skills_config.json",
@@ -475,7 +475,6 @@ class DigitalBeingServer:
 
                 config_path = Path(self.being.config_path) / config_file_name
 
-                # Load existing config
                 try:
                     if config_path.exists():
                         with open(config_path, "r") as f:
@@ -498,7 +497,7 @@ class DigitalBeingServer:
                 # Update the config
                 current_config[key] = value
 
-                # Write back to the config file
+                # Write back
                 try:
                     with open(config_path, "w") as f:
                         json.dump(current_config, f, indent=2)
@@ -509,9 +508,8 @@ class DigitalBeingServer:
                         "message": f"Failed to write to {config_file_name}.",
                     }
 
-                # Update in-memory config
+                # Update in-memory
                 self.being.configs[section][key] = value
-
                 logger.info(f"Updated config: [{section}] {key} = {value}")
 
                 return {
@@ -522,9 +520,7 @@ class DigitalBeingServer:
             elif command == "get_activity_history":
                 limit = params.get("limit", 10)
                 offset = params.get("offset", 0)
-                recents = self.being.memory.get_recent_activities(
-                    limit=limit, offset=offset
-                )
+                recents = self.being.memory.get_recent_activities(limit=limit, offset=offset)
                 total = self.being.memory.get_activity_count()
                 return {
                     "success": True,
@@ -565,7 +561,6 @@ class DigitalBeingServer:
 
             elif command == "get_activity_code":
                 from framework.activity_loader import read_activity_code
-
                 activity_name = params.get("activity_name")
                 code_str = read_activity_code(activity_name)
                 if code_str is None:
@@ -577,7 +572,6 @@ class DigitalBeingServer:
 
             elif command == "save_activity_code":
                 from framework.activity_loader import write_activity_code
-
                 activity_name = params.get("activity_name")
                 new_code = params.get("new_code")
                 ok = write_activity_code(activity_name, new_code)
@@ -589,8 +583,16 @@ class DigitalBeingServer:
             elif command == "save_onboarding_data":
                 """
                 Expects 'character', 'skills', and 'constraints' from front-end.
-                If you also want to let user enable/disable activities in front-end,
-                pass 'constraints.activities_config' with the new enabled settings here.
+                The 'skills' object may have e.g.:
+                  {
+                    "lite_llm": {
+                      "enabled": true,
+                      "model_name": "openai/gpt-4o",
+                      "required_api_keys": ["LITELLM"],
+                      "provided_api_key": "sk-1234abcd..."
+                    },
+                    "default_llm_skill": "lite_llm"
+                  }
                 """
                 try:
                     char_data = params.get("character", {})
@@ -599,45 +601,48 @@ class DigitalBeingServer:
 
                     char_path = Path(self.being.config_path) / "character_config.json"
                     skill_path = Path(self.being.config_path) / "skills_config.json"
-                    actc_path = (
-                        Path(self.being.config_path) / "activity_constraints.json"
-                    )
+                    actc_path = Path(self.being.config_path) / "activity_constraints.json"
 
                     existing_char = {}
                     existing_skills = {}
                     existing_actc = {}
 
+                    # Load existing JSON
                     if char_path.exists():
-                        existing_char = json.loads(
-                            char_path.read_text(encoding="utf-8")
-                        )
+                        existing_char = json.loads(char_path.read_text(encoding="utf-8"))
                     if skill_path.exists():
-                        existing_skills = json.loads(
-                            skill_path.read_text(encoding="utf-8")
-                        )
+                        existing_skills = json.loads(skill_path.read_text(encoding="utf-8"))
                     if actc_path.exists():
-                        existing_actc = json.loads(
-                            actc_path.read_text(encoding="utf-8")
-                        )
+                        existing_actc = json.loads(actc_path.read_text(encoding="utf-8"))
 
+                    # Merge the new data
                     existing_char.update(char_data)
                     existing_skills.update(skills_data)
-                    # Merge constraints
                     for k, v in constraints_data.items():
                         existing_actc[k] = v
 
-                    # Possibly set "setup_complete": true
+                    # Possibly set "setup_complete"
                     existing_char["setup_complete"] = True
 
-                    char_path.write_text(
-                        json.dumps(existing_char, indent=2), encoding="utf-8"
-                    )
-                    skill_path.write_text(
-                        json.dumps(existing_skills, indent=2), encoding="utf-8"
-                    )
-                    actc_path.write_text(
-                        json.dumps(existing_actc, indent=2), encoding="utf-8"
-                    )
+                    # If user provided an API key for any skill, store it with secret manager
+                    for skill_name, skill_info in skills_data.items():
+                        if not isinstance(skill_info, dict):
+                            continue
+                        maybe_key = skill_info.get("provided_api_key")
+                        if maybe_key:
+                            required_keys = skill_info.get("required_api_keys", [])
+                            if required_keys:
+                                main_key = required_keys[0]
+                                await api_manager.set_api_key(skill_name, main_key, maybe_key)
+
+                            # Remove 'provided_api_key' from final JSON if you prefer
+                            if "provided_api_key" in existing_skills[skill_name]:
+                                del existing_skills[skill_name]["provided_api_key"]
+
+                    # Save the updated JSON
+                    char_path.write_text(json.dumps(existing_char, indent=2), encoding="utf-8")
+                    skill_path.write_text(json.dumps(existing_skills, indent=2), encoding="utf-8")
+                    actc_path.write_text(json.dumps(existing_actc, indent=2), encoding="utf-8")
 
                     # Reload in memory
                     self.being.configs["character_config"] = existing_char
@@ -645,6 +650,7 @@ class DigitalBeingServer:
                     self.being.configs["activity_constraints"] = existing_actc
 
                     return {"success": True, "message": "Onboarding data saved."}
+
                 except Exception as e:
                     logger.error(f"Error saving onboarding data: {e}", exc_info=True)
                     return {"success": False, "message": str(e)}
