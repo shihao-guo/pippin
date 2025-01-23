@@ -185,7 +185,7 @@ cd my_digital_being
 
 Copy the config_sample folder.
 ```bash
-cp config_sample config
+cp -r config_sample config
 ```
 
 You can pick one of the following approaches:
