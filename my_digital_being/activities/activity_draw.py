@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @activity(
     name="draw",
     energy_cost=0.6,
-    cooldown=1000,  # 2 hours
+    cooldown=3600, 
     required_skills=["image_generation"],
 )
 class DrawActivity(ActivityBase):
