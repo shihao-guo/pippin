@@ -26,9 +26,9 @@ class PostRecentMemoriesTweetActivity(ActivityBase):
 
     def __init__(self, num_activities_to_fetch: int = 10):
         super().__init__()
-        self.max_length = 280
+        self.max_length = 500
         self.composio_action = "TWITTER_CREATION_OF_A_POST"
-        self.twitter_username = "YourUserName"
+        self.twitter_username = "dittowalletbot"
 
         # Activity types to ignore in memory results
         self.ignored_activity_types = [

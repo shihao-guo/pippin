@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @activity(
     name="post_a_tweet",
     energy_cost=0.4,
-    cooldown=10000,  # 1 hour
+    cooldown=3600,  # 1 hour
     required_skills=["twitter_posting"],
 )
 class PostTweetActivity(ActivityBase):
@@ -25,12 +25,12 @@ class PostTweetActivity(ActivityBase):
 
     def __init__(self):
         super().__init__()
-        self.max_length = 280
+        self.max_length = 500
         # The Composio action name from your logs
         self.composio_action = "TWITTER_CREATION_OF_A_POST"
         # If you know your Twitter username, you can embed it in the link
         # or fetch it dynamically. Otherwise, substitute accordingly:
-        self.twitter_username = "YourUserName"
+        self.twitter_username = "dittowalletbot"
 
     async def execute(self, shared_data) -> ActivityResult:
         try:
