@@ -84,9 +84,9 @@ class DrawActivity(ActivityBase):
 
         # Base prompts for different moods
         mood_prompts = {
-            "happy": "a sunny landscape with vibrant colors",
+            "happy": "a magic forest with rainbow, unicorn, fairy or other magical creatures",
             "neutral": "a peaceful scene with balanced composition",
-            "sad": "a rainy day with muted colors",
+            "sad": "a dark forest with a witch, dragon or other dark creatures",
         }
 
         # Get base prompt from mood

@@ -6,6 +6,7 @@ from framework.activity_decorator import activity, ActivityBase, ActivityResult
 from framework.api_management import api_manager
 from framework.memory import Memory
 from skills.skill_chat import chat_skill
+from utils.twitter_utils import upload_image_to_twitter
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +139,7 @@ class PostRecentMemoriesTweetActivity(ActivityBase):
                 metadata={
                     "length": len(tweet_text),
                     "tweet_link": tweet_link,
-                    "prompt_used": prompt_text,
+                    "chat_prompt_used": prompt_text,
                     "model": chat_response["data"].get("model"),
                     "finish_reason": chat_response["data"].get("finish_reason"),
                 },
@@ -335,59 +336,18 @@ class PostRecentMemoriesTweetActivity(ActivityBase):
         Downloads images from URLs and uploads them to Twitter via Composio.
         Returns a list of Twitter media IDs.
         """
-        import aiohttp
-        import base64
-        from framework.composio_integration import composio_manager
-        
         media_ids = []
         
         if not drawing_urls:
             return media_ids
             
-        async with aiohttp.ClientSession() as session:
-            for url in drawing_urls:
-                try:
-                    # Download image
-                    async with session.get(url) as response:
-                        if response.status != 200:
-                            logger.warning(f"Failed to download image from {url}: {response.status}")
-                            continue
-                            
-                        image_data = await response.read()
-                        
-                    # Convert to base64
-                    base64_image = base64.b64encode(image_data).decode('utf-8')
-                    
-                    # Extract filename from URL or use default
-                    filename = url.split('/')[-1].split('?')[0] or 'image.png'
-                    
-                    # Upload to Twitter via Composio
-                    upload_response = composio_manager._toolset.execute_action(
-                        action="TWITTER_MEDIA_UPLOAD_MEDIA",
-                        params={
-                            "media": {
-                                "name": filename,
-                                "content": base64_image
-                            }
-                        },
-                        entity_id="MyDigitalBeing"
-                    )
-                    
-                    # Composio returns 'successfull' instead of 'successful'
-                    if upload_response.get("successful") or upload_response.get("successfull"):
-                        media_id = upload_response.get("media_id") or upload_response.get("data", {}).get("media_id")
-                        if media_id:
-                            media_ids.append(media_id)
-                            logger.info(f"Successfully uploaded image to Twitter, media_id: {media_id}")
-                        else:
-                            logger.warning(f"Upload succeeded but no media_id returned. Response: {upload_response}")
-                    else:
-                        error = upload_response.get("error", "Unknown error")
-                        logger.warning(f"Failed to upload image to Twitter: {error}")
-                        
-                except Exception as e:
-                    logger.error(f"Error uploading image to Twitter: {e}", exc_info=True)
-                    continue
+        for url in drawing_urls:
+            try:
+                new_media_ids = await upload_image_to_twitter(url)
+                media_ids.extend(new_media_ids)
+            except Exception as e:
+                logger.error(f"Error uploading image to Twitter: {e}", exc_info=True)
+                continue
                   
         logger.debug(f"Uploaded drawing URLs to Twitter media: {media_ids}")     
         return media_ids
