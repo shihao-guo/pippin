@@ -20,28 +20,17 @@ import os
 import warnings
 
 import websockets
-from websockets.server import serve as ws_serve
-from websockets.server import WebSocketServerProtocol
+from websockets.server import serve
+from websockets.legacy.server import WebSocketServerProtocol
+
+# Initialize the logger with logging.INFO before importing other modules
+# to make sure INFO level logs are printed (Otherwise it gets set to WARN)
+logging.basicConfig(level=logging.INFO)
 
 # Import api_manager at top-level (not again inside any function)
 from framework.api_management import api_manager
 from framework.main import DigitalBeing
 from framework.skill_config import DynamicComposioSkills
-
-warnings.filterwarnings("ignore", message="Valid config keys have changed in V2")
-
-def configure_logging():
-    """Configure logging with proper format and level"""
-    log_level = os.getenv('LOGLEVEL', 'INFO').upper()
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        force=True  # Force reconfiguration of the root logger
-    )
-    # Suppress websockets debug logs unless specifically wanted
-    if log_level != 'DEBUG':
-        logging.getLogger('websockets').setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -751,19 +740,6 @@ class DigitalBeingServer:
             logger.error(f"Failed to start server: {e}")
             raise
 
-
-async def main():
-    # Configure logging first thing
-    configure_logging()
-    
-    logger.debug("Logging configured with level: %s", os.getenv('LOGLEVEL', 'INFO'))
-    logger.info("Starting Digital Being server...")
-    logger.debug("Creating server instance...")
-    
-    server = DigitalBeingServer()
-    logger.debug("Starting server...")
-    await server.start_server()
-
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    server = DigitalBeingServer()
+    asyncio.run(server.start_server())
