@@ -32,7 +32,7 @@ class PostTweetActivity(ActivityBase):
         # or fetch it dynamically. Otherwise, substitute accordingly:
         self.twitter_username = "YourUserName"
         # set this to True if you want to generate an image for the tweet
-        self.image_generation_enabled = True
+        self.image_generation_enabled = False
         self.default_size = (1024, 1024)  # Added for image generation
         self.default_format = "png"  # Added for image generation
 
