@@ -3,8 +3,10 @@
 import logging
 import base64
 import aiohttp
+import os
 from typing import Dict, Any, Optional, List
 from framework.composio_integration import composio_manager
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,15 @@ class XAPISkill:
         self.posts_count = 0
         self.twitter_username = config.get("twitter_username", "YourUserName")  # Get from config
         
+        # Create storage directory if it doesn't exist
+        # Get the project root directory (2 levels up from this file)
+        current_file = Path(__file__)
+        project_root = current_file.parent.parent
+        self.storage_path = project_root / "storage" / "images"
+        self.storage_path.mkdir(parents=True, exist_ok=True)
+        
+        logger.info(f"Image storage path: {self.storage_path}")
+        
         # Composio action names
         self.post_action = "TWITTER_CREATION_OF_A_POST"
         self.media_upload_action = "TWITTER_MEDIA_UPLOAD_MEDIA"
@@ -42,6 +53,7 @@ class XAPISkill:
         Download image from URL and upload to Twitter via Composio.
         Returns media ID if successful, None otherwise.
         """
+        local_path = None
         try:
             logger.info(f"Downloading media from URL: {media_url}")
             async with aiohttp.ClientSession() as session:
@@ -49,40 +61,49 @@ class XAPISkill:
                     if response.status != 200:
                         logger.warning(f"Failed to download image from {media_url}: {response.status}")
                         return None
-                        
+                    
+                    # Extract filename and create local path
+                    filename = media_url.split('/')[-1].split('?')[0] or 'image.png'
+                    local_path = self.storage_path / filename
+                    
+                    # Save the file locally
                     image_data = await response.read()
-            
-            # Convert to base64
-            base64_image = base64.b64encode(image_data).decode('utf-8')
-            
-            # Extract filename from URL or use default
-            filename = media_url.split('/')[-1].split('?')[0] or 'image.png'
-            
-            # Upload to Twitter via Composio
-            logger.info(f"Uploading media to Twitter: {filename}")
-            upload_response = composio_manager._toolset.execute_action(
-                action=self.media_upload_action,
-                params={
-                    "media": {
-                        "name": filename,
-                        "content": base64_image
-                    }
-                },
-                entity_id="MyDigitalBeing"
-            )
-            
-            if upload_response.get("successful") or upload_response.get("successfull"):
-                media_id = upload_response.get("media_id") or upload_response.get("data", {}).get("media_id")
-                if media_id:
-                    logger.info(f"Successfully uploaded image to Twitter, media_id: {media_id}")
-                    return media_id
-            
-            logger.warning(f"Failed to upload image to Twitter: {upload_response.get('error', 'Unknown error')}")
-            return None
+                    with open(local_path, 'wb') as f:
+                        f.write(image_data)
+                    
+                    logger.info(f"Saved image to {local_path}")
+                    
+                    # Upload to Twitter via Composio
+                    logger.info(f"Uploading media to Twitter")
+                    upload_response = composio_manager._toolset.execute_action(
+                        action=self.media_upload_action,
+                        params={
+                            "media": str(local_path)  # Just pass the file path as a string
+                        },
+                        entity_id="MyDigitalBeing"
+                    )
                 
+                if upload_response.get("successful"):
+                    media_id = upload_response.get("data", {}).get("media_id")
+                    if media_id:
+                        logger.info(f"Successfully uploaded image to Twitter, media_id: {media_id}")
+                        return media_id
+                
+                logger.warning(f"Failed to upload image to Twitter: {upload_response.get('error', 'Unknown error')}")
+                return None
+                    
         except Exception as e:
             logger.error(f"Error uploading image to Twitter: {e}", exc_info=True)
             return None
+        
+        finally:
+            # Clean up the temporary file
+            if local_path and local_path.exists():
+                try:
+                    local_path.unlink()
+                    logger.info(f"Cleaned up temporary file: {local_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to clean up temporary file {local_path}: {e}")
 
     async def post_tweet(self, text: str, media_urls: List[str] = None) -> Dict[str, Any]:
         """
